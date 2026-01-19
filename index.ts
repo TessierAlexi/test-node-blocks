@@ -1,6 +1,7 @@
 #!/usr/bin/env ts-node
 export { };
 
+// SEE END OF FILE FOR SAMPLE COMMANDS AND CLI USAGE
 // TODO: With more time, I would refactor this code for better clarity and maintainability:
 // 1. Add type definitions for commands to improve type safety and avoid magic strings.
 //    Define interfaces like:
@@ -57,6 +58,12 @@ export function handleInput(commands: Array<string>) {
     return pile;
 }
 
+/**
+ * Moves block a onto block b, clearing any blocks above both a and b.
+ * @param a The block to move.
+ * @param b The block to move onto.
+ * @param pile The current state of piles.
+ */
 function moveOnto(a: number, b: number, pile: number[][]) {
     // unstack whats on both a and b
     pile[a].length > 1 ? unstack(a, pile) : null;
@@ -68,6 +75,12 @@ function moveOnto(a: number, b: number, pile: number[][]) {
     }
 }
 
+/**
+ * Moves block a over block b, clearing any blocks above a.
+ * @param a The block to move.
+ * @param b The block to move over.
+ * @param pile The current state of piles.
+ */
 function moveOver(a: number, b: number, pile: number[][]) {
     // unstack whats on both a and b
     pile[a].length > 1 ? unstack(a, pile) : null;
@@ -79,6 +92,12 @@ function moveOver(a: number, b: number, pile: number[][]) {
     }
 }
 
+/**
+ * Moves block a over block b, clearing any blocks above a.
+ * @param a The block at the bottom of the stack to move.
+ * @param b The block to clear then pile a's pile on top of.
+ * @param pile The current state of piles.
+ */
 function pileOnto(a: number, b: number, pile: number[][]) {
     // unstack whats on both a and b
     pile[b].length > 1 ? unstack(b, pile) : null;
@@ -89,6 +108,12 @@ function pileOnto(a: number, b: number, pile: number[][]) {
     }
 }
 
+/**
+ * Moves block a over block b, clearing any blocks above a.
+ * @param a The block at the bottom of the stack to move.
+ * @param b The block to pile a on top of.
+ * @param pile The current state of piles.
+ */
 function pileOver(a: number, b: number, pile: number[][]) {
     // stack a on b
     const aPileStack = popStackOnTopOf(a, pile);
@@ -98,17 +123,27 @@ function pileOver(a: number, b: number, pile: number[][]) {
     }
 }
 
+/**
+ * 
+ * @param a index of the stack to clear
+ * @param pile current pile
+ */
 function unstack(a: number, pile: number[][]) {
     // Return all blocks stacked above block 'a' to their initial positions.
     while (pile[a][pile[a].length - 1] != a) {
         const top = pile[a].pop();
         if (top !== undefined) {
             pile[top].push(top);
-            console.log(`Moved ${top} back to its position`);
         }
     }
 }
 
+/**
+ * 
+ * @param target block to find in stacks
+ * @param pile current stack
+ * @returns index of stack containing given target block
+ */
 function findStackContaining(target: number, pile: number[][]): number {
     for (let j = 0; j < pile.length; j++) {
         if (pile[j].includes(target)) {
@@ -118,12 +153,17 @@ function findStackContaining(target: number, pile: number[][]): number {
     throw new Error(`Block ${target} not found in any pile`);
 }
 
+/**
+ * 
+ * @param target bottom of stack to extract
+ * @param pile current pile
+ * @returns extracted stack, already popped from its pile
+ */
 function popStackOnTopOf(target: number, pile: number[][]): number[] {
     // Extract the subpile consisting of 'target' and all blocks above it, removing them from the pile.
     let returnPile: number[] = [];
     for (let j = 0; j < pile.length; j++) {
-                if (pile[j].includes(target)) {
-            console.log(`Found ${target} in pile ${j}`);
+        if (pile[j].includes(target)) {
             // Get the index of target in pile[j]
             const index = pile[j].indexOf(target);
             return pile[j].splice(index);
@@ -132,6 +172,12 @@ function popStackOnTopOf(target: number, pile: number[][]): number[] {
     throw new Error(`Block ${target} not found in any pile`);
 }
 
+/**
+ * 
+ * @param pile current pile
+ * @param n number of blocks
+ * @returns formatted string representation of the pile
+ */
 export function printState(pile: number[][], n: number): string {
     return Array.from({ length: n }, (_, i) =>
         `${i}:${pile[i] && pile[i].length > 0 ? ' ' + pile[i].join(' ') : ''}`
@@ -149,12 +195,10 @@ export function runCLI(input: string): string {
 
 // Run inline: use CLI args as input lines if provided, else sample
 const input = process.argv.length > 2 ? process.argv.slice(2).join('\n') : '10\nmove 9 onto 1\npile 8 over 1\npile 7 over 1\npile 6 over 1\npile 5 over 1\nmove 3 over 1\npile 2 over 1\nmove 4 over 9\nquit';
-if (process.argv[1] && process.argv[1].endsWith('index.ts')) {
-    console.log(runCLI(input));
-}
-// example usage : 
+console.log(runCLI(input));
+// example usage :
 // ts-node --esm index.ts 10 "move 9 onto 1" "pile 8 over 1" "pile 7 over 1" "pile 6 over 1" "pile 5 over 1" "move 3 over 1" "pile 2 over 1" "move 4 over 9" quit
-//results in : 
+//results in :
 // "0: 0
 // 1: 1 9 8 7 6 5 3 2 4
 // 2:
@@ -165,3 +209,4 @@ if (process.argv[1] && process.argv[1].endsWith('index.ts')) {
 // 7:
 // 8:
 // 9:"
+// this one for the provided example from the given sheet : ts-node --esm index.ts 10 "move 9 onto 1" "move 8 over 1" "move 7 over 1" "move 6 over 1" "pile 8 over 6" "pile 8 over 5" "move 2 over 1" "move 4 over 9" quit
