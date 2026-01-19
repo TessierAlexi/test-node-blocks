@@ -104,18 +104,10 @@ function pileOnto(a: number, b: number, pile: number[][]) {
         const block = aPileStack[k];
         pile[b].push(block);
     }
-
-    const blockA = pile[a].pop();
-    if (blockA !== undefined) {
-        pile[b].push(blockA);
-        console.log(`Piled ${a} on ${b}`);
-    }
 }
 
 function pileOver(a: number, b: number, pile: number[][]) {
     console.log(`Piling ${a} over ${b}`);
-    // unstack whats on both a and b
-    pile[a].length > 1 ? unstack(a, pile) : console.log(`${a} is clear`);
     // stack a on b
     const pileIndex = findStackContaining(b, pile);
 
