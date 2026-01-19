@@ -1,106 +1,87 @@
 #!/usr/bin/env ts-node
+export { };
 
-const input: string = process.argv[2];
-if (!input) {
-  console.error('Usage: ts-node cli.ts <input>');
-  process.exit(1);
-}
-console.log(`Your input: ${input}`);
+// TODO: With more time, I would refactor this code for better clarity and maintainability:
+// 1. Add type definitions for commands to improve type safety and avoid magic strings.
+//    Define interfaces like:
+//    type CommandAction = 'move' | 'pile';
+//    type CommandDirection = 'onto' | 'over';
+//    interface ParsedCommand { action: CommandAction; a: number; direction: CommandDirection; b: number; }
+//    And a parseCommand function to convert string commands to this structured type.
+// 2. Refactor handleInput into smaller, more focused functions:
+//    - Extract pile initialization into initializePiles(numBlocks: number): number[][].
+//    - Create processCommand(cmd: string, pile: number[][]) to handle individual commands.
+//    - Use early returns and reduce nesting in the main loop.
+//    This would make the code more modular, easier to test, and less prone to errors.
 
-
-handleInput(["10",
-"move 9 onto 1",
-"move 8 over 1",
-"move 7 over 1",
-"move 6 over 1",
-"pile 8 over 6",
-"pile 8 over 5",
-"move 2 over 1",
-"move 4 over 9",
-"move 1 onto 9",
-"move 2 over 9",
-"pile 1 onto 5",
-"quit"]);
-
-function handleInput(commands: Array<string>) {
+/**
+ * Processes a sequence of block manipulation commands for the UVa 101 problem.
+ * @param commands Array of strings: first is n (number of blocks), then commands, ends with 'quit'.
+ * @returns The final state of piles as number[][].
+ */
+export function handleInput(commands: Array<string>) {
     let length = 0;
-    let pile : number[][];
+    let pile: number[][];
     pile = [];
-    for(let i = 0; i < commands.length; i++) {       
+    for (let i = 0; i < commands.length; i++) {
         if (i == 0) {
             length = parseInt(commands[i]);
-            console.log(length);
             for (let j = 0; j < length; j++) {
                 pile[j] = [j];
             }
-
-            console.log(pile);
             continue;
         }
-        if (commands[i] != "quit") {
-            // assume its move
-            console.log(commands[i]);
-            const commandSplitByWord = commands[i].split(" ");
-            if (parseInt(commandSplitByWord[1]) == parseInt(commandSplitByWord[3])) {
-                console.log("Same block command, ignoring");
-                continue;
+        if (commands[i] == "quit") {
+            break;
+        }
+        const commandSplitByWord = commands[i].split(" ");
+        const a = parseInt(commandSplitByWord[1]);
+        const b = parseInt(commandSplitByWord[3]);
+        if (findStackContaining(a, pile) === findStackContaining(b, pile)) {
+            continue; // Ignore illegal commands
+        }
+        if (commandSplitByWord[0] === "move") {
+            if (commandSplitByWord[2] == "onto") {
+                moveOnto(a, b, pile);
+            } else if (commandSplitByWord[2] == "over") {
+                moveOver(a, b, pile);
             }
-            if (commandSplitByWord[0] === "move") {
-                console.log("Moving");
-                if (commandSplitByWord[2] == "onto" ) {
-                   moveOnto(parseInt(commandSplitByWord[1]), parseInt(commandSplitByWord[3]), pile);
-                } else
-                if (commandSplitByWord[2] == "over") {
-                    moveOver(parseInt(commandSplitByWord[1]), parseInt(commandSplitByWord[3]), pile);
-                }
-            } else if (commandSplitByWord[0] === "pile") {
-                console.log("Piling");
-                if (commandSplitByWord[2] == "onto" ) {
-                    pileOnto(parseInt(commandSplitByWord[1]), parseInt(commandSplitByWord[3]), pile);
-                } else
-                if (commandSplitByWord[2] == "over") {
-                    pileOver(parseInt(commandSplitByWord[1]), parseInt(commandSplitByWord[3]), pile);
-                }
+        } else if (commandSplitByWord[0] === "pile") {
+            if (commandSplitByWord[2] == "onto") {
+                pileOnto(a, b, pile);
+            } else if (commandSplitByWord[2] == "over") {
+                pileOver(a, b, pile);
             }
         }
-        console.log(pile);
     }
+    return pile;
 }
 
 function moveOnto(a: number, b: number, pile: number[][]) {
-    console.log(`Moving ${a} onto ${b}`);
     // unstack whats on both a and b
-    pile[a].length > 1 ? unstack(a, pile) : console.log(`${a} is clear`);
-    pile[b].length > 1 ? unstack(b, pile) : console.log(`${b} is clear`); 
+    pile[a].length > 1 ? unstack(a, pile) : null;
+    pile[b].length > 1 ? unstack(b, pile) : null;
     // stack a on b
     const blockA = pile[a].pop();
     if (blockA !== undefined) {
         pile[b].push(blockA);
-        console.log(`Moved ${a} on ${b}`);
     }
 }
 
 function moveOver(a: number, b: number, pile: number[][]) {
-    console.log(`Moving ${a} over ${b}`);
     // unstack whats on both a and b
-    pile[a].length > 1 ? unstack(a, pile) : console.log(`${a} is clear`);
+    pile[a].length > 1 ? unstack(a, pile) : null;
     // stack a on b
     const pileIndex = findStackContaining(b, pile);
-
-
     const blockA = pile[a].pop();
     if (blockA !== undefined) {
         pile[pileIndex].push(blockA);
-        console.log(`Moved ${a} over to ${b}`);
     }
 }
 
 function pileOnto(a: number, b: number, pile: number[][]) {
-    console.log(`Piling ${a} onto ${b}`);
     // unstack whats on both a and b
-    pile[b].length > 1 ? unstack(b, pile) : console.log(`${b} is clear`); 
-     
-    // stack a pile on b
+    pile[b].length > 1 ? unstack(b, pile) : null;
     const aPileStack = popStackOnTopOf(a, pile);
     for (let k = 0; k < aPileStack.length; k++) {
         const block = aPileStack[k];
@@ -109,7 +90,6 @@ function pileOnto(a: number, b: number, pile: number[][]) {
 }
 
 function pileOver(a: number, b: number, pile: number[][]) {
-    console.log(`Piling ${a} over ${b}`);
     // stack a on b
     const aPileStack = popStackOnTopOf(a, pile);
     for (let k = 0; k < aPileStack.length; k++) {
@@ -119,7 +99,7 @@ function pileOver(a: number, b: number, pile: number[][]) {
 }
 
 function unstack(a: number, pile: number[][]) {
-    console.log(`Unstacking ${a}`);
+    // Return all blocks stacked above block 'a' to their initial positions.
     while (pile[a][pile[a].length - 1] != a) {
         const top = pile[a].pop();
         if (top !== undefined) {
@@ -130,9 +110,8 @@ function unstack(a: number, pile: number[][]) {
 }
 
 function findStackContaining(target: number, pile: number[][]): number {
-     for (let j = 0; j < pile.length; j++) {
+    for (let j = 0; j < pile.length; j++) {
         if (pile[j].includes(target)) {
-            console.log(`Found ${target} in pile ${j}`);
             return j;
         }
     }
@@ -140,14 +119,49 @@ function findStackContaining(target: number, pile: number[][]): number {
 }
 
 function popStackOnTopOf(target: number, pile: number[][]): number[] {
-    let returnPile: number[] = []; 
+    // Extract the subpile consisting of 'target' and all blocks above it, removing them from the pile.
+    let returnPile: number[] = [];
     for (let j = 0; j < pile.length; j++) {
-        if (pile[j].includes(target)) {
+                if (pile[j].includes(target)) {
             console.log(`Found ${target} in pile ${j}`);
             // Get the index of target in pile[j]
             const index = pile[j].indexOf(target);
-            return pile[j].splice(index); 
+            return pile[j].splice(index);
         }
     }
     throw new Error(`Block ${target} not found in any pile`);
 }
+
+export function printState(pile: number[][], n: number): string {
+    return Array.from({ length: n }, (_, i) =>
+        `${i}:${pile[i] && pile[i].length > 0 ? ' ' + pile[i].join(' ') : ''}`
+    ).join('\n');
+}
+
+// vibe coded CLI input handling to test it with custom inputs and default to an example
+
+// CLI input handling function
+export function runCLI(input: string): string {
+    const lines = input.trim().split('\n');
+    const pile = handleInput(lines);
+    return printState(pile, parseInt(lines[0]));
+}
+
+// Run inline: use CLI args as input lines if provided, else sample
+const input = process.argv.length > 2 ? process.argv.slice(2).join('\n') : '10\nmove 9 onto 1\npile 8 over 1\npile 7 over 1\npile 6 over 1\npile 5 over 1\nmove 3 over 1\npile 2 over 1\nmove 4 over 9\nquit';
+if (process.argv[1] && process.argv[1].endsWith('index.ts')) {
+    console.log(runCLI(input));
+}
+// example usage : 
+// ts-node --esm index.ts 10 "move 9 onto 1" "pile 8 over 1" "pile 7 over 1" "pile 6 over 1" "pile 5 over 1" "move 3 over 1" "pile 2 over 1" "move 4 over 9" quit
+//results in : 
+// "0: 0
+// 1: 1 9 8 7 6 5 3 2 4
+// 2:
+// 3:
+// 4:
+// 5:
+// 6:
+// 7:
+// 8:
+// 9:"
