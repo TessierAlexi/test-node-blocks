@@ -41,6 +41,10 @@ function handleInput(commands: Array<string>) {
             // assume its move
             console.log(commands[i]);
             const commandSplitByWord = commands[i].split(" ");
+            if (parseInt(commandSplitByWord[1]) == parseInt(commandSplitByWord[3])) {
+                console.log("Same block command, ignoring");
+                continue;
+            }
             if (commandSplitByWord[0] === "move") {
                 console.log("Moving");
                 if (commandSplitByWord[2] == "onto" ) {
@@ -55,13 +59,11 @@ function handleInput(commands: Array<string>) {
                     pileOnto(parseInt(commandSplitByWord[1]), parseInt(commandSplitByWord[3]), pile);
                 } else
                 if (commandSplitByWord[2] == "over") {
-                    // TODO: implement pile over
                     pileOver(parseInt(commandSplitByWord[1]), parseInt(commandSplitByWord[3]), pile);
                 }
             }
         }
         console.log(pile);
-
     }
 }
 
@@ -109,13 +111,10 @@ function pileOnto(a: number, b: number, pile: number[][]) {
 function pileOver(a: number, b: number, pile: number[][]) {
     console.log(`Piling ${a} over ${b}`);
     // stack a on b
-    const pileIndex = findStackContaining(b, pile);
-
-
-    const blockA = pile[a].pop();
-    if (blockA !== undefined) {
-        pile[pileIndex].push(blockA);
-        console.log(`Piled ${a} over to ${b}`);
+    const aPileStack = popStackOnTopOf(a, pile);
+    for (let k = 0; k < aPileStack.length; k++) {
+        const block = aPileStack[k];
+        pile[b].push(block);
     }
 }
 
