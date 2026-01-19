@@ -1,0 +1,11 @@
+services:
+  node-app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app  # Mounts source for live changes
+      - /node_modules  # Preserves container node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
