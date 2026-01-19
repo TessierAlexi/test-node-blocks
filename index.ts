@@ -18,6 +18,8 @@ handleInput(["10",
 "move 2 over 1",
 "move 4 over 9",
 "move 1 onto 9",
+"move 2 over 9",
+"pile 1 onto 5",
 "quit"]);
 
 function handleInput(commands: Array<string>) {
@@ -49,6 +51,13 @@ function handleInput(commands: Array<string>) {
                 }
             } else if (commandSplitByWord[0] === "pile") {
                 console.log("Piling");
+                if (commandSplitByWord[2] == "onto" ) {
+                    pileOnto(parseInt(commandSplitByWord[1]), parseInt(commandSplitByWord[3]), pile);
+                } else
+                if (commandSplitByWord[2] == "over") {
+                    // TODO: implement pile over
+                    pileOver(parseInt(commandSplitByWord[1]), parseInt(commandSplitByWord[3]), pile);
+                }
             }
         }
         console.log(pile);
@@ -65,7 +74,7 @@ function moveOnto(a: number, b: number, pile: number[][]) {
     const blockA = pile[a].pop();
     if (blockA !== undefined) {
         pile[b].push(blockA);
-        console.log(`Stacked ${a} on ${b}`);
+        console.log(`Moved ${a} on ${b}`);
     }
 }
 
@@ -81,6 +90,40 @@ function moveOver(a: number, b: number, pile: number[][]) {
     if (blockA !== undefined) {
         pile[pileIndex].push(blockA);
         console.log(`Moved ${a} over to ${b}`);
+    }
+}
+
+function pileOnto(a: number, b: number, pile: number[][]) {
+    console.log(`Piling ${a} onto ${b}`);
+    // unstack whats on both a and b
+    pile[b].length > 1 ? unstack(b, pile) : console.log(`${b} is clear`); 
+     
+    // stack a pile on b
+    const aPileStack = popStackOnTopOf(a, pile);
+    for (let k = 0; k < aPileStack.length; k++) {
+        const block = aPileStack[k];
+        pile[b].push(block);
+    }
+
+    const blockA = pile[a].pop();
+    if (blockA !== undefined) {
+        pile[b].push(blockA);
+        console.log(`Piled ${a} on ${b}`);
+    }
+}
+
+function pileOver(a: number, b: number, pile: number[][]) {
+    console.log(`Piling ${a} over ${b}`);
+    // unstack whats on both a and b
+    pile[a].length > 1 ? unstack(a, pile) : console.log(`${a} is clear`);
+    // stack a on b
+    const pileIndex = findStackContaining(b, pile);
+
+
+    const blockA = pile[a].pop();
+    if (blockA !== undefined) {
+        pile[pileIndex].push(blockA);
+        console.log(`Piled ${a} over to ${b}`);
     }
 }
 
@@ -100,6 +143,19 @@ function findStackContaining(target: number, pile: number[][]): number {
         if (pile[j].includes(target)) {
             console.log(`Found ${target} in pile ${j}`);
             return j;
+        }
+    }
+    throw new Error(`Block ${target} not found in any pile`);
+}
+
+function popStackOnTopOf(target: number, pile: number[][]): number[] {
+    let returnPile: number[] = []; 
+    for (let j = 0; j < pile.length; j++) {
+        if (pile[j].includes(target)) {
+            console.log(`Found ${target} in pile ${j}`);
+            // Get the index of target in pile[j]
+            const index = pile[j].indexOf(target);
+            return pile[j].splice(index); 
         }
     }
     throw new Error(`Block ${target} not found in any pile`);
