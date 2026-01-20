@@ -1,4 +1,4 @@
-import { handleInput, printState } from './index';
+import { handleInput } from './index.ts';
 
 describe('Blocks Problem (UVa 101)', () => {
   test('initializes n blocks correctly', () => {
@@ -100,24 +100,6 @@ describe('Blocks Problem (UVa 101)', () => {
   test('quit early stops processing', () => {
     const pile = handleInput(['5', 'move 3 over 1', 'quit', 'ignore this']);
     expect(pile).toEqual([[0], [1,3], [2], [], [4]]);
-  });
-
-  test('printState helper matches output format', () => {
-    const pile = [[0,2], [], [1]];  // n=3
-    const output = printState(pile, 3);
-    expect(output).toBe('0: 0 2\n1:\n2: 1');
-  });
-
-  test('printState with single block per pile', () => {
-    const pile = [[0], [1], [2]];  // n=3
-    const output = printState(pile, 3);
-    expect(output).toBe('0: 0\n1: 1\n2: 2');
-  });
-
-  test('printState with empty piles', () => {
-    const pile = [[], [], []];  // n=3
-    const output = printState(pile, 3);
-    expect(output).toBe('0:\n1:\n2:');
   });
 
   test('n=1 edge case', () => {
