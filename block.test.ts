@@ -34,13 +34,15 @@ describe('Blocks Problem (UVa 101)', () => {
     ]);
   });
 
-  test('move onto clears both and stacks', () => {
+  test('move onto clears blocks on top of a and b', () => {
     const pile = handleInput([
       '5',
-      'move 3 onto 1',  // 1:[1,3] others single/clear
+      'move 1 over 0', // 0: [0, 1]
+      'move 3 over 2', // 2: [2, 3]
+      'move 0 onto 2', // should return 1 and 3 to their initial positions
       'quit'
     ]);
-    expect(pile).toEqual([[0], [1,3], [2], [], [4]]);
+    expect(pile).toEqual([[], [1], [2, 0], [3], [4]]);
   });
 
   test('move over clears src only, stacks on target pile', () => {
@@ -52,12 +54,13 @@ describe('Blocks Problem (UVa 101)', () => {
     expect(pile).toEqual([[0,2], [1], [], [3]]);
   });
 
-  test('pile onto moves subpile to cleared dst', () => {
+  test('pile onto clears blocks on top of b', () => {
     const pile = handleInput([
       '6',
       'move 4 over 1',  // 1:[1,4]
       'move 5 over 1',  // 1:[1,4,5]
-      'pile 1 onto 2',  // moves [1,4,5] to 2 (cleared)
+      'move 3 over 2',  // 2:[2,3]
+      'pile 1 onto 2',  // should return 3 to its initial position
       'quit'
     ]);
     expect(pile).toEqual([[0], [], [2,1,4,5], [3], [], []]);
@@ -88,10 +91,10 @@ describe('Blocks Problem (UVa 101)', () => {
     expect(pile).toEqual([[0,1], [], [2]]);
   });
 
-  test('n=25 max, complex sequence', () => {
+  test('n=24 max, complex sequence', () => {
     // Add a long test with many ops ensuring no index errors
-    const pile = handleInput(['25', 'move 0 over 1', 'quit']);
-    expect(pile.length).toBe(25);
+    const pile = handleInput(['24', 'move 0 over 1', 'quit']);
+    expect(pile.length).toBe(24);
   });
 
   test('quit early stops processing', () => {
@@ -161,5 +164,61 @@ describe('Blocks Problem (UVa 101)', () => {
     ]);
     expect(pile).toEqual([[0,2,4], [], [], [], [], [5,1,3]]);
   });
-});
 
+  // New test cases to expose the bug
+  test('should move block onto a block that has been moved', () => {
+    const commands = [
+      '10',
+      'move 1 onto 2',
+      'move 3 onto 1',
+      'quit'
+    ];
+    const pile = handleInput(commands);
+    expect(pile[2]).toEqual([2, 1, 3]);
+  });
+
+  test('should pile blocks over a block that has been moved', () => {
+    const commands = [
+        '10',
+        'move 1 onto 2',
+        'move 3 over 4',
+        'pile 5 over 1',
+        'quit'
+    ];
+    const pile = handleInput(commands);
+    expect(pile[2]).toEqual([2, 1, 5]);
+  });
+
+  test('should ignore piling over a block in the same pile', () => {
+    const commands = [
+      '4',
+      'move 1 over 0',
+      'move 2 over 0',
+      'move 3 over 0',
+      'pile 0 over 1',
+      'quit'
+    ];
+    const pile = handleInput(commands);
+    expect(pile[0]).toEqual([0, 1, 2, 3]);
+    expect(pile[1]).toEqual([]);
+  });
+
+  test('piling a single block is equivalent to moving', () => {
+    const pile = handleInput([
+      '3',
+      'pile 1 over 0',
+      'quit'
+    ]);
+    expect(pile).toEqual([[0, 1], [], [2]]);
+  });
+
+  test('a block is not moved back to its initial position by an illegal move', () => {
+    const pile = handleInput([
+      '3',
+      'move 1 over 0',
+      'move 1 over 1',
+      'quit'
+    ]);
+    expect(pile).toEqual([[0, 1], [], [2]]);
+  });
+});

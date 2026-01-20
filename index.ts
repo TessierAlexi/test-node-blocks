@@ -38,7 +38,7 @@ export function handleInput(commands: Array<string>) {
         const commandSplitByWord = commands[i].split(" ");
         const a = parseInt(commandSplitByWord[1]);
         const b = parseInt(commandSplitByWord[3]);
-        if (findStackContaining(a, pile) === findStackContaining(b, pile)) {
+        if (a === b || findStackContaining(a, pile) === findStackContaining(b, pile)) {
             continue; // Ignore illegal commands
         }
         if (commandSplitByWord[0] === "move") {
@@ -66,12 +66,14 @@ export function handleInput(commands: Array<string>) {
  */
 function moveOnto(a: number, b: number, pile: number[][]) {
     // unstack whats on both a and b
-    pile[a].length > 1 ? unstack(a, pile) : null;
-    pile[b].length > 1 ? unstack(b, pile) : null;
+    unstack(a, pile);
+    unstack(b, pile);
     // stack a on b
-    const blockA = pile[a].pop();
+    const aPileIndex = findStackContaining(a, pile);
+    const bPileIndex = findStackContaining(b, pile);
+    const blockA = pile[aPileIndex].pop();
     if (blockA !== undefined) {
-        pile[b].push(blockA);
+        pile[bPileIndex].push(blockA);
     }
 }
 
@@ -83,12 +85,13 @@ function moveOnto(a: number, b: number, pile: number[][]) {
  */
 function moveOver(a: number, b: number, pile: number[][]) {
     // unstack whats on both a and b
-    pile[a].length > 1 ? unstack(a, pile) : null;
+    unstack(a, pile);
     // stack a on b
-    const pileIndex = findStackContaining(b, pile);
-    const blockA = pile[a].pop();
+    const aPileIndex = findStackContaining(a, pile);
+    const bPileIndex = findStackContaining(b, pile);
+    const blockA = pile[aPileIndex].pop();
     if (blockA !== undefined) {
-        pile[pileIndex].push(blockA);
+        pile[bPileIndex].push(blockA);
     }
 }
 
@@ -100,11 +103,12 @@ function moveOver(a: number, b: number, pile: number[][]) {
  */
 function pileOnto(a: number, b: number, pile: number[][]) {
     // unstack whats on both a and b
-    pile[b].length > 1 ? unstack(b, pile) : null;
+    unstack(b, pile);
     const aPileStack = popStackOnTopOf(a, pile);
+    const bPileIndex = findStackContaining(b, pile);
     for (let k = 0; k < aPileStack.length; k++) {
         const block = aPileStack[k];
-        pile[b].push(block);
+        pile[bPileIndex].push(block);
     }
 }
 
@@ -117,9 +121,10 @@ function pileOnto(a: number, b: number, pile: number[][]) {
 function pileOver(a: number, b: number, pile: number[][]) {
     // stack a on b
     const aPileStack = popStackOnTopOf(a, pile);
+    const bPileIndex = findStackContaining(b, pile);
     for (let k = 0; k < aPileStack.length; k++) {
         const block = aPileStack[k];
-        pile[b].push(block);
+        pile[bPileIndex].push(block);
     }
 }
 
@@ -130,8 +135,9 @@ function pileOver(a: number, b: number, pile: number[][]) {
  */
 function unstack(a: number, pile: number[][]) {
     // Return all blocks stacked above block 'a' to their initial positions.
-    while (pile[a][pile[a].length - 1] != a) {
-        const top = pile[a].pop();
+    const aPileIndex = findStackContaining(a, pile);
+    while (pile[aPileIndex][pile[aPileIndex].length - 1] != a) {
+        const top = pile[aPileIndex].pop();
         if (top !== undefined) {
             pile[top].push(top);
         }
@@ -161,15 +167,9 @@ function findStackContaining(target: number, pile: number[][]): number {
  */
 function popStackOnTopOf(target: number, pile: number[][]): number[] {
     // Extract the subpile consisting of 'target' and all blocks above it, removing them from the pile.
-    let returnPile: number[] = [];
-    for (let j = 0; j < pile.length; j++) {
-        if (pile[j].includes(target)) {
-            // Get the index of target in pile[j]
-            const index = pile[j].indexOf(target);
-            return pile[j].splice(index);
-        }
-    }
-    throw new Error(`Block ${target} not found in any pile`);
+    const targetPileIndex = findStackContaining(target, pile);
+    const index = pile[targetPileIndex].indexOf(target);
+    return pile[targetPileIndex].splice(index);
 }
 
 /**
